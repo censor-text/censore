@@ -9,6 +9,7 @@ setup(
     author="Okinea Dev",
     url="https://github.com/okineadev/censore",
     packages=find_packages(),
+    package_data={'censore' :['censore/data/list/*.txt']}
     include_package_data=True,
     install_requires=[],
     classifiers=[
