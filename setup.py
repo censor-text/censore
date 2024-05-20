@@ -2,14 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name="censore",
-    version="0.1.1",
+    version="0.1.2",
     description="A package for censoring profanity in text",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Okinea Dev",
     url="https://github.com/okineadev/censore",
     packages=find_packages(),
-    package_data={'censore' :['censore/data/list/*.txt']},
+    package_data={'' :['data/list/*.txt']},
     include_package_data=True,
     install_requires=[],
     classifiers=[
