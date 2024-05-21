@@ -21,7 +21,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: 📥 Checkout
+      uses: actions/checkout@v4.1.5
+      with:
+          submodules: true  # Initialize and update submodules
+
     - name: 🐍 Set up Python
       uses: actions/setup-python@v3
       with:
