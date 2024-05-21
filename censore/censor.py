@@ -12,7 +12,7 @@ class Censor:
         """
         self.languages: List[str] = []
         self.profanity_list: Dict[str, List[str]] = {}
-        self.data_folder = "data/list"
+        self.data_folder = os.path.join(os.path.dirname(__file__), "data/list")
 
         # Substitution table for normalizing words
         self.substitution_table = str.maketrans(
