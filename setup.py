@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="censore",
-    version="0.1.2",
+    version="0.1.0",
     description="A package for censoring profanity in text",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
