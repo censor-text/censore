@@ -36,7 +36,9 @@ class Censor:
         if custom_words:
             self.add_custom_words(custom_words)
 
-    def _load_languages(self, languages: List[str]) -> None:
+    def _load_languages(
+        self, languages: List[str], is_additional: bool = False
+    ) -> None:
         """
         Loads the list of profane words for the specified language(s) from files.
 
@@ -50,14 +52,13 @@ class Censor:
             for filename in os.listdir(self.data_folder):
                 if filename.endswith(".txt"):
                     languages_for_loading.append(os.path.splitext(filename)[0])
-
         else:
             languages_for_loading = languages
 
         for language in languages_for_loading:
-            self._load_language(language)
+            self._load_language(language, is_additional)
 
-    def _load_language(self, language: str) -> None:
+    def _load_language(self, language: str, is_additional: bool = False) -> None:
         """
         Loads the list of profane words for the specified language from a file.
 
@@ -71,7 +72,9 @@ class Censor:
                 profanities = file.read().split()
 
             self.profanity_list[language] = profanities
-            self.languages.append(language)
+
+            if not is_additional:
+                self.languages.append(language)
 
     def add_custom_words(
         self, custom_words: List[str], language: str = "custom"
@@ -92,13 +95,13 @@ class Censor:
         :param custom_words: A list of custom words to add to the profanity list for the specified language.
         """
 
-        for word in custom_words:
-            if not self.profanity_list.get(language):
-                self.profanity_list[language] = []
+        if language not in self.profanity_list:
+            self.profanity_list[language] = []
 
-            self.profanity_list[language].append(word)
+        self.profanity_list[language] = custom_words
 
-        self.languages.append(language)
+        if language not in self.languages:
+            self.languages.append(language)
 
     def _normalize_word(self, word: str) -> str:
         """
@@ -125,7 +128,7 @@ class Censor:
         """
         Checks if the input string contains any profanity from the specified languages.
 
-        :param string: The input string to check for profanity.
+        :param text: The input string to check for profanity.
         :param languages: A list of languages to check for profanity. If "all", checks all available languages.
         :return: True if the string contains profanity, False otherwise.
         """
@@ -136,7 +139,7 @@ class Censor:
         if languages:
             self._load_languages(languages)
 
-            if languages == ["all"]:
+            if "all" in languages:
                 languages = self.languages
         else:
             languages = self.languages
@@ -145,11 +148,10 @@ class Censor:
             words = line.split(" ")
 
             for language in languages:
-                for i, word in enumerate(words):
+                for word in words:
                     normalized_word = self._normalize_word(word)
 
-                    if normalized_word in self.profanity_list[language]:
-                        # Replace the entire word if it matches the profanity
+                    if normalized_word in self.profanity_list.get(language, []):
                         return True
 
         return False
@@ -177,6 +179,7 @@ class Censor:
         self,
         text: str,
         languages: Optional[List[str]] = None,
+        additional_languages: Optional[List[str]] = None,
         custom_words: List[str] = [],
         partial_censor: bool = False,
         censoring_char: str = "#",
@@ -191,31 +194,33 @@ class Censor:
         :return: The censored text.
         """
 
-        # Split the text into lines to process each line separately
         lines = text.split("\n")
         censored_lines = []
 
-        if languages:
-            # Ensure all specified languages are loaded
-            self._load_languages(languages)
+        active_languages = list(self.languages)  # Clone the current languages
 
-            if languages == ["all"]:
-                languages = self.languages
-        else:
-            languages = self.languages
+        if languages:
+            self._load_languages(languages)
+            if "all" in languages:
+                active_languages = self.languages
+            else:
+                active_languages = languages
+
+        if additional_languages:
+            self._load_languages(additional_languages, is_additional=True)
+            active_languages += additional_languages
 
         for line in lines:
             words = line.split(" ")
 
-            for language in languages:
+            for language in active_languages:
                 for i, word in enumerate(words):
                     normalized_word = self._normalize_word(word)
 
                     if (
-                        normalized_word in self.profanity_list[language]
+                        normalized_word in self.profanity_list.get(language, [])
                         or normalized_word in custom_words
                     ):
-                        # Replace the entire word if it matches the profanity
                         words[i] = words[i].replace(
                             self._strip(word),
                             self.censor_word(
@@ -223,9 +228,7 @@ class Censor:
                             ),
                         )
 
-            # Reassemble the line with censored words
             censored_line = " ".join(words)
             censored_lines.append(censored_line)
 
-        # Reassemble the text with censored lines
         return "\n".join(censored_lines)
