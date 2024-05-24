@@ -3,7 +3,9 @@ from typing import List, Dict, Optional
 
 
 class Censor:
-    def __init__(self, languages: List[str] = ["en"]) -> None:
+    def __init__(
+        self, languages: List[str] = ["en"], custom_words: Optional[List[str]] = None
+    ) -> None:
         """
         Initializes the Censor object by loading the appropriate profanity lists
         for the specified languages.
@@ -30,6 +32,9 @@ class Censor:
 
         # Load profanity lists for each language
         self._load_languages(languages)
+
+        if custom_words:
+            self.add_custom_words(custom_words)
 
     def _load_languages(self, languages: List[str]) -> None:
         """
@@ -67,6 +72,33 @@ class Censor:
 
             self.profanity_list[language] = profanities
             self.languages.append(language)
+
+    def add_custom_words(
+        self, custom_words: List[str], language: str = "custom"
+    ) -> None:
+        """
+        Adds custom words to the profanity list.
+
+        :param custom_words: A list of custom words to add to the profanity list.
+        """
+
+        self.add_custom_lang(language, custom_words)
+
+    def add_custom_lang(self, language: str, custom_words: List[str]) -> None:
+        """
+        Adds custom words to the profanity list for the specified language.
+
+        :param language: The language for which to add the custom words.
+        :param custom_words: A list of custom words to add to the profanity list for the specified language.
+        """
+
+        for word in custom_words:
+            if not self.profanity_list.get(language):
+                self.profanity_list[language] = []
+
+            self.profanity_list[language].append(word)
+
+        self.languages.append(language)
 
     def _normalize_word(self, word: str) -> str:
         """
@@ -145,6 +177,7 @@ class Censor:
         self,
         text: str,
         languages: Optional[List[str]] = None,
+        custom_words: List[str] = [],
         partial_censor: bool = False,
         censoring_char: str = "#",
     ) -> str:
@@ -178,7 +211,10 @@ class Censor:
                 for i, word in enumerate(words):
                     normalized_word = self._normalize_word(word)
 
-                    if normalized_word in self.profanity_list[language]:
+                    if (
+                        normalized_word in self.profanity_list[language]
+                        or normalized_word in custom_words
+                    ):
                         # Replace the entire word if it matches the profanity
                         words[i] = words[i].replace(
                             self._strip(word),
