@@ -88,7 +88,7 @@ class Censor:
         return word.strip(".,!?:;/()[]{}-")
 
     def contains_profanity(
-        self, string: str, languages: Optional[List[str]] = None
+        self, text: str, languages: Optional[List[str]] = None
     ) -> bool:
         """
         Checks if the input string contains any profanity from the specified languages.
@@ -97,6 +97,9 @@ class Censor:
         :param languages: A list of languages to check for profanity. If "all", checks all available languages.
         :return: True if the string contains profanity, False otherwise.
         """
+
+        lines = text.split("\n")
+
         # Ensure all specified languages are loaded
         if languages:
             self._load_languages(languages)
@@ -106,10 +109,16 @@ class Censor:
         else:
             languages = self.languages
 
-        for language in languages:
-            for profanity in self.profanity_list[language]:
-                if profanity in string:
-                    return True
+        for line in lines:
+            words = line.split(" ")
+
+            for language in languages:
+                for i, word in enumerate(words):
+                    normalized_word = self._normalize_word(word)
+
+                    if normalized_word in self.profanity_list[language]:
+                        # Replace the entire word if it matches the profanity
+                        return True
 
         return False
 
