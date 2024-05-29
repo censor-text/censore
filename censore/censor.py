@@ -123,7 +123,11 @@ class Censor:
         return word.strip(".,!?:;/()[]{}-")
 
     def contains_profanity(
-        self, text: str, languages: Optional[List[str]] = None
+        self,
+        text: str,
+        languages: Optional[List[str]] = None,
+        additional_languages: Optional[List[str]] = None,
+        custom_words: List[str] = [],
     ) -> bool:
         """
         Checks if the input string contains any profanity from the specified languages.
@@ -132,6 +136,21 @@ class Censor:
         :param languages: A list of languages to check for profanity. If "all", checks all available languages.
         :return: True if the string contains profanity, False otherwise.
         """
+
+        # Ensure all specified languages are loaded
+        active_languages = list(self.languages)  # Clone the current languages
+
+        if languages:
+            self._load_languages(languages)
+
+            if "all" in languages:
+                active_languages = self.languages
+            else:
+                active_languages = languages
+
+        if additional_languages:
+            self._load_languages(additional_languages, is_additional=True)
+            active_languages += additional_languages
 
         lines = text.split("\n")
 
@@ -147,12 +166,48 @@ class Censor:
         for line in lines:
             words = line.split(" ")
 
-            for language in languages:
+            for language in active_languages:
                 for word in words:
                     normalized_word = self._normalize_word(word)
 
-                    if normalized_word in self.profanity_list.get(language, []):
+                    if (
+                        normalized_word in self.profanity_list.get(language, [])
+                        or normalized_word in custom_words
+                    ):
                         return True
+
+        return False
+
+    def is_profane(
+        self,
+        word: str,
+        languages: Optional[List[str]] = None,
+        additional_languages: Optional[List[str]] = None,
+        custom_words: List[str] = [],
+    ) -> bool:
+        # Ensure all specified languages are loaded
+        active_languages = list(self.languages)  # Clone the current languages
+
+        if languages:
+            self._load_languages(languages)
+
+            if "all" in languages:
+                active_languages = self.languages
+            else:
+                active_languages = languages
+
+        if additional_languages:
+            self._load_languages(additional_languages, is_additional=True)
+            active_languages += additional_languages
+
+        for language in active_languages:
+            normalized_word = self._normalize_word(word)
+
+            if (
+                normalized_word in self.profanity_list.get(language, [])
+                or normalized_word in custom_words
+            ):
+                return True
 
         return False
 
@@ -201,6 +256,7 @@ class Censor:
 
         if languages:
             self._load_languages(languages)
+
             if "all" in languages:
                 active_languages = self.languages
             else:
