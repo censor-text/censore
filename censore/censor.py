@@ -3,6 +3,23 @@ from typing import List, Dict, Optional
 
 
 class Censor:
+    # Substitution table for normalizing words
+
+    substitution_table = str.maketrans(
+        {
+            "0": "o",
+            "1": "i",
+            "@": "a",
+            "$": "s",
+            "3": "e",
+            "5": "s",
+            "7": "t",
+            "8": "b",
+        }
+    )
+
+    data_folder = os.path.join(os.path.dirname(__file__), "data/list")
+
     def __init__(
         self, languages: List[str] = ["en"], custom_words: Optional[List[str]] = None
     ) -> None:
@@ -14,21 +31,6 @@ class Censor:
         """
         self.languages: List[str] = []
         self.profanity_list: Dict[str, List[str]] = {}
-        self.data_folder = os.path.join(os.path.dirname(__file__), "data/list")
-
-        # Substitution table for normalizing words
-        self.substitution_table = str.maketrans(
-            {
-                "0": "o",
-                "1": "i",
-                "@": "a",
-                "$": "s",
-                "3": "e",
-                "5": "s",
-                "7": "t",
-                "8": "b",
-            }
-        )
 
         # Load profanity lists for each language
         self._load_languages(languages)
@@ -103,7 +105,8 @@ class Censor:
         if language not in self.languages:
             self.languages.append(language)
 
-    def _normalize_word(self, word: str) -> str:
+    @staticmethod
+    def _normalize_word(word: str) -> str:
         """
         Normalizes a word by substituting characters according to the substitution table
         and removing punctuation.
@@ -111,9 +114,10 @@ class Censor:
         :param word: The word to normalize.
         :return: The normalized word.
         """
-        return self._strip(word.translate(self.substitution_table)).lower()
+        return Censor._strip(word.translate(Censor.substitution_table)).lower()
 
-    def _strip(self, word: str) -> str:
+    @staticmethod
+    def _strip(word: str) -> str:
         """
         Strips punctuation from the beginning and end of a word.
 
