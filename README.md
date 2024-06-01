@@ -3,7 +3,11 @@
 
 <div align="center">
   <a href="https://github.com/censor-text/censore">
-    <img src="public/logo.png" alt="Logo">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="public/logo-dark.png" alt="Banner">
+      <source media="(prefers-color-scheme: light)" srcset="public/logo-light.png" alt="Banner">
+      <img src="public/logo-dark.png" alt="Banner">
+    </picture>
   </a>
 
 <h3 align="center">censore</h3>
