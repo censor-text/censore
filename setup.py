@@ -8,7 +8,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Okinea Dev",
-    url="https://github.com/okineadev/censore",
+    url="https://github.com/censor-text/censore",
     packages=find_packages(),
     package_data={"": ["data/list/*.txt"]},
     include_package_data=True,
