@@ -2,7 +2,7 @@
 <!-- markdownlint-disable MD041 -->
 
 <div align="center">
-  <a href="https://github.com/okineadev/dotload">
+  <a href="https://github.com/censor-text/censore">
     <img src="public/logo.png" alt="Logo">
   </a>
 
@@ -12,9 +12,9 @@
     A tool for censoring obscene language
     <br />
     <br />
-    <a href="https://github.com/okineadev/censore/issues/new?labels=bug"><b>Report Bug</b></a>
+    <a href="https://github.com/censor-text/censore/issues/new?labels=bug"><b>Report Bug</b></a>
     ·
-    <a href="https://github.com/okineadev/censore/issues/new?labels=enhancement"><b>Request Feature</b></a>
+    <a href="https://github.com/censor-text/censore/issues/new?labels=enhancement"><b>Request Feature</b></a>
   </p>
 </div>
 
@@ -122,7 +122,7 @@ censor.censor_text("fuck you lololo, abc", custom_words=["lololo", "abc"])
 
 This can be useful if the tool does not define a word or if you have some specific words
 
-If you do notice any missing word, please make an [**issue**](https://github.com/okineadev/censore/issues/new?labels=new+word) or [**PR**](https://github.com/okineadev/profanity-list/pull/new) with a new word in the [repository with lists of these words](https://github.com/okineadev/profanity-list), we will be **very** grateful 😉
+If you do notice any missing word, please make an [**issue**](https://github.com/censor-text/profanity-list/issues/new?labels=new+word) or [**PR**](https://github.com/censor-text/profanity-list/pull/new) with a new word in the [repository with lists of these words](https://github.com/censor-text/profanity-list), we will be **very** grateful 😉
 
 ## 🤝 Contributing
 
