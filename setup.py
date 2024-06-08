@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="censore",
     # noqa
-    version="0.1.4",
+    version="0.1.5",
     description="A package for censoring profanity in text",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
