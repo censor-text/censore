@@ -67,7 +67,7 @@ pf.censor("fuck you хуєсос")
 
 #### `censor_symbol` parameter
 
-As you can see, this function replace the bad words with `#`
+As you can see, this function replaces the bad words with `#`
 
 You can choose any other character to censor, such as **monkey** 🙈:
 
