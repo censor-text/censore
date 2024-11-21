@@ -26,8 +26,6 @@
 
 This tool helps identify and censor profanity
 
-It can be used in **any** cases, for example for text censorship, for audio and video censorship, etc.
-
 ## ⚙️ Installation
 
 Just run this command in the terminal:
@@ -43,38 +41,38 @@ Before you can start working with the text, you **need** to initialize the `Cens
 ```python
 from censore import ProfanityFilter
 
-censor = ProfanityFilter(languages=["en", "uk"])
+pf = ProfanityFilter(languages=["en", "uk"])
 ```
 
-If no language was specified, all languages will be loaded by default
+If no language was specified, all available languages will be loaded by default
 
-### `censor_text`
+### `censor`
 
-To censor text, use the `censor_text` method:
+To censor text, use the `censor` method:
 
 ```python
-censor.censor_text("fuck you")
+pf.censor("fuck you")
 # #### you
 ```
 
 It can censor **different languages ​​at the same time**, here is an example:
 
 ```python
-censor.censor_text("fuck you хуєсос")
+pf.censor("fuck you хуєсос")
 # #### you ######
 ```
 
 > [!TIP]
 > The tool also recognizes masked words such as `@ssh0le` (asshole) and censors them
 
-#### `censoring_char` parameter
+#### `censor_symbol` parameter
 
-As you can see, this function replaced the bad word with `#`
+As you can see, this function replaces the bad words with `#`
 
 You can choose any other character to censor, such as **monkey** 🙈:
 
 ```python
-censor.censor_text("fuck you", censor_symbol="🙈")
+pf.censor("fuck you", censor_symbol="🙈")
 # 🙈🙈🙈🙈 you
 ```
 
@@ -85,8 +83,9 @@ censor.censor_text("fuck you", censor_symbol="🙈")
 If you have a special case and you need to censor the text in some specific languages ​​other than the preloaded ones, you can specify them in the `languages` parameter:
 
 ```python
-censor.censor_text("fuck you хуєсос kapullo", languages=["en", "es"])
-# **** you хуєсос *******
+pf = ProfanityFilter(languages=["en", "es"])
+pf.censor("fuck you хуєсос kapullo", languages=["en", "es"])
+# #### you хуєсос ######
 ```
 
 Oh, the Ukrainian word `хуєсос` was **not** censored 😨
@@ -96,8 +95,8 @@ We could add Ukrainian to the `languages` parameter, but would you like to enter
 I think not, then we can just use the `additional_languages` option:
 
 ```python
-censor.censor_text("fuck you хуєсос kapullo", additional_languages=["es"])
-# **** you ****** *******
+censor.censor("fuck you хуєсос kapullo", additional_languages=["es"])
+# #### you ###### ######
 ```
 
 ✨ Perfectly! Now, in addition to English and Ukrainian, Spanish will be used in this operation
@@ -109,24 +108,44 @@ censor.censor_text("fuck you хуєсос kapullo", additional_languages=["es"])
 You can use partial censoring to leave only the first and last letters:
 
 ```python
-censor.censor("assfucker", partial_censor=True)
+pf.censor("assfucker", partial_censor=True)
 # as#####er
 ```
 
-#### `custom_words` parameter
+#### `custom_patterns` parameter
 
-This parameter allows you to add custom words for censore
+This parameter allows you to add custom words for censoring
 
 Here is an example:
 
 ```python
-censor.censor_text("fuck you lololo, abc", custom_patterns=["lololo", "abc"])
+pf.censor("fuck you lololo, abc", custom_patterns=["lololo", "abc"])
 # #### you ######, ###
 ```
 
 This can be useful if the tool does not define a word or if you have some specific words
 
 If you do notice any missing word, please make an [**issue**](https://github.com/censor-text/profanity-list/issues/new?labels=new+word) or [**PR**](https://github.com/censor-text/profanity-list/pull/new) with a new word in the [repository with lists of these words](https://github.com/censor-text/profanity-list), we will be **very** grateful 😉
+
+#### `custom_exclude_patterns` parameter
+
+This parameter allows you to add custom words to exclude from censoring
+
+There may be such unexpected cases:
+
+```python
+pf.censor("порахуй мене", custom_exclude_patterns=["порахуй"])
+# ####### мене
+```
+
+The text contains the word "порахуй" (count), it might be considered a profanity because it contains "хуй" (dick). To prevent this, you can use the `custom_exclude_patterns` parameter and add the word "порахуй":
+
+```python
+pf.censor("порахуй мене", custom_exclude_patterns=["порахуй"])
+# порахуй мене
+```
+
+But don't worry, most of such cases are already foreseen and such exceptions are added by default 😉
 
 ## 🤝 Contributing
 
