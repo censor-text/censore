@@ -41,7 +41,7 @@ Censore is a Python library that provides profanity filtering capabilities with 
 
 #### Data Files
 
-- `data/patterns/*.txt`: Language-specific pattern files containing:
+- `data/*patterns/*.txt`: Language-specific pattern files containing:
   - One pattern per line
   - Lowercase entries
   - No duplicates
@@ -49,8 +49,7 @@ Censore is a Python library that provides profanity filtering capabilities with 
 
 #### Test Files
 
-- `test_filter.py`: Unit tests for filtering functionality, censoring options, and language support
-- `test_patterns.py`: Tests for pattern matching, custom patterns, and exclusion rules
+- `test.py`: Unit tests for filtering functionality, censoring options, and language support
 
 ## Core Components
 
@@ -77,7 +76,7 @@ The main class that handles all profanity filtering functionality.
 
 #### Pattern Storage
 
-- Location: `/data/patterns/`
+- Location: `/data/patterns/` and `/data/exclude_patterns/`
 - Format: Text files (.txt) for each language
 - Structure: One pattern per line
 - Naming: `{language_code}.txt`
