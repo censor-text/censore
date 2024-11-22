@@ -17,11 +17,13 @@ class TestProfanityFilter(unittest.TestCase):
             self.filter.contains_profanity(text_without_profanity, languages=["en"])
         )
 
-    def test_is_profane(self):
+    def test_contains_profanity(self):
         profane_word = "fuck"
         non_profane_word = "good"
-        self.assertTrue(self.filter.is_profane(profane_word, languages=["en"]))
-        self.assertFalse(self.filter.is_profane(non_profane_word, languages=["en"]))
+        self.assertTrue(self.filter.contains_profanity(profane_word, languages=["en"]))
+        self.assertFalse(
+            self.filter.contains_profanity(non_profane_word, languages=["en"])
+        )
 
     def test_censor_word(self):
         word = "fuck"
@@ -41,7 +43,7 @@ class TestProfanityFilter(unittest.TestCase):
 
     def test_add_custom_patterns(self):
         custom_patterns = ["foobar"]
-        self.filter.add_custom_patterns(custom_patterns, [])
+        self.filter.add_custom_profanity_patterns(custom_patterns, [])
         self.assertTrue(
             self.filter.contains_profanity(
                 "This is a foobar text.", languages=["custom"]
@@ -51,7 +53,7 @@ class TestProfanityFilter(unittest.TestCase):
     def test_add_custom_lang(self):
         custom_patterns = ["foobar"]
         custom_exclude_patterns = ["notfoobar"]
-        self.filter.add_custom_lang(
+        self.filter.add_custom_language(
             "custom_lang", custom_patterns, custom_exclude_patterns
         )
         self.assertTrue(
