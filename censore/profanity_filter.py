@@ -351,34 +351,33 @@ class ProfanityFilter:
         for line in lines:
             words = line.split()
 
+            profanity_patterns = set()
+            exclude_patterns = set()
+
             for language in active_languages:
-                for word in words:
-                    stripped_word = self._strip(word)
-                    normalized_word = self._normalize_word(word)
+                profanity_patterns.update(self.profanity_patterns[language]["patterns"])
+                exclude_patterns.update(
+                    self.profanity_patterns[language]["exclude_patterns"]
+                )
 
-                    print(stripped_word, normalized_word)
+            profanity_patterns.update(custom_patterns)
+            exclude_patterns.update(custom_exclude_patterns)
 
-                    if not any(
-                        pattern in normalized_word
-                        for pattern in self.profanity_patterns.get(language).get(
-                            "exclude_patterns", []
-                        )
-                        + custom_exclude_patterns
-                    ) and any(
-                        pattern in normalized_word
-                        for pattern in self.profanity_patterns.get(language).get(
-                            "patterns", []
-                        )
-                        + custom_patterns
-                    ):
-                        censored_word = self.censor_word(
-                            word=stripped_word,
-                            partial_censor=partial_censor,
-                            censoring_char=censor_symbol,
-                        )
-                        censored_text = censored_text.replace(
-                            stripped_word,
-                            censored_word,
-                        )
+            for word in words:
+                stripped_word = self._strip(word)
+                normalized_word = self._normalize_word(word)
+
+                if not any(
+                    pattern in normalized_word for pattern in exclude_patterns
+                ) and any(pattern in normalized_word for pattern in profanity_patterns):
+                    censored_word = self.censor_word(
+                        word=stripped_word,
+                        partial_censor=partial_censor,
+                        censoring_char=censor_symbol,
+                    )
+                    censored_text = censored_text.replace(
+                        stripped_word,
+                        censored_word,
+                    )
 
         return censored_text
