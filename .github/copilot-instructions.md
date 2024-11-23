@@ -1,9 +1,9 @@
 
-# GitHub Copilot Instructions for Censore Project
+# GitHub Copilot Instructions for **censore** Project
 
 ## Project Overview
 
-Censore is a Python library for profanity filtering with multi-language support. The code should follow these key principles:
+**censore** is a Python library for profanity filtering with multi-language support. The code should follow these key principles:
 
 - Type safety using Python type hints
 - Clean code practices with clear documentation
@@ -15,8 +15,8 @@ Censore is a Python library for profanity filtering with multi-language support.
 ### Type Hints
 
 - Always use type hints for function parameters and return values
-- Use Optional[] for nullable parameters
-- Use List[], Dict[], Set[] from typing module
+- Use `Optional[]` for nullable parameters
+- Use `List[]`, `Dict[]`, `Set[]` from typing module
 
 Example:
 
