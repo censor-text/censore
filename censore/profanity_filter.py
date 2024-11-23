@@ -1,10 +1,10 @@
-import string
 import os
 from typing import List, Optional, Dict, Set
 
 
 class ProfanityFilter:
-    _substitution_table = str.maketrans(
+    # Translation table for character substitutions to normalize words
+    _substitution_table: Dict[str, str] = str.maketrans(
         {
             "0": "o",
             "1": "i",
@@ -17,7 +17,10 @@ class ProfanityFilter:
         }
     )
 
-    _data_folder = os.path.join(os.path.dirname(__file__), "data")
+    strip_chars: str = ".,!?:;/()[]{}-"
+
+    # Path to the data folder containing pattern files
+    _data_folder: str = os.path.join(os.path.dirname(__file__), "data")
 
     def __init__(
         self,
@@ -34,11 +37,13 @@ class ProfanityFilter:
             custom_exclude_patterns (List[str], optional): A list of custom patterns to exclude from profanity filtering. Defaults to an empty list.
         """
 
-        self.languages: List[str] = []
-        self.profanity_patterns = {}
+        self.languages: Set[str] = set()
+        self.profanity_patterns: Dict[str, Dict[str, List[str]]] = dict()
 
+        # Load language patterns
         self._load_languages(languages)
 
+        # Add custom patterns if provided
         if custom_patterns or custom_exclude_patterns:
             self.add_custom_profanity_patterns(custom_patterns, custom_exclude_patterns)
 
@@ -46,33 +51,41 @@ class ProfanityFilter:
         self, languages: List[str], is_additional_language: bool = False
     ) -> None:
         """
-        Load language patterns for the profanity filter.
+        Loads language patterns for filtering.
 
-        This method loads language patterns from the specified list of languages.
-        If "all" is included in the list, it loads patterns for all available languages.
+        If the list of languages contains "all", it loads patterns for all available languages,
+        using caching to improve performance.
 
         Args:
-            languages (List[str]): A list of language codes to load. If "all" is included,
+            languages (List[str]): List of language codes to load. If it contains "all",
                                    all available languages will be loaded.
-            is_additional_language (bool, optional): A flag indicating whether the languages
-                                                     being loaded are additional languages.
+            is_additional_language (bool, optional): Flag indicating whether the languages are additional.
                                                      Defaults to False.
 
         Returns:
             None
+
+        Raises:
+            ValueError: If patterns for the specified language are not found.
+            FileNotFoundError: If the patterns directory is not found.
         """
 
-        languages_for_loading = []
-
+        # Determine which languages to load
         if "all" in languages:
-            for filename in os.listdir(os.path.join(self._data_folder, "patterns")):
-                if filename.endswith(".txt"):
-                    languages_for_loading.append(os.path.splitext(filename)[0])
+            languages_for_loading = [
+                os.path.splitext(filename)[0]
+                for filename in os.listdir(os.path.join(self._data_folder, "patterns"))
+                if filename.endswith(".txt")
+            ]
         else:
-            languages_for_loading = languages
+            languages_for_loading = set(languages)
 
+        # Load patterns for each language
         for language in languages_for_loading:
-            self._load_language(language, is_additional_language)
+            try:
+                self._load_language(language, is_additional_language)
+            except FileNotFoundError:
+                raise ValueError(f"Patterns for language '{language}' not found")
 
     def _load_language(
         self, language: str, is_additional_language: bool = False
@@ -105,8 +118,8 @@ class ProfanityFilter:
             ) as file_with_profanity_patterns, open(
                 path_to_exclude_patterns, "r", encoding="utf-8"
             ) as file_with_exclude_patterns:
-                profanity_patterns = file_with_profanity_patterns.read().split()
-                exclude_patterns = file_with_exclude_patterns.read().split()
+                profanity_patterns = set(file_with_profanity_patterns.read().split())
+                exclude_patterns = set(file_with_exclude_patterns.read().split())
 
             self.profanity_patterns[language] = {
                 "patterns": profanity_patterns,
@@ -114,7 +127,7 @@ class ProfanityFilter:
             }
 
             if not is_additional_language:
-                self.languages.append(language)
+                self.languages.add(language)
 
     @staticmethod
     def _normalize_word(word: str) -> str:
@@ -127,6 +140,8 @@ class ProfanityFilter:
         Returns:
             str: The normalized word.
         """
+
+        # Translate characters using the substitution table and convert to lowercase
         return word.translate(ProfanityFilter._substitution_table).lower()
 
     @staticmethod
@@ -140,7 +155,9 @@ class ProfanityFilter:
         Returns:
             str: The word with specified punctuation characters removed from its beginning and end.
         """
-        return word.strip(".,!?:;/()[]{}-")
+
+        # Use the strip method with predefined characters to remove punctuation
+        return word.strip(ProfanityFilter.strip_chars)
 
     def add_custom_profanity_patterns(
         self,
@@ -177,13 +194,22 @@ class ProfanityFilter:
             None
         """
 
-        self.profanity_patterns[language] = {
-            "patterns": custom_patterns,
-            "exclude_patterns": exclude_patterns,
-        }
+        # Use set operations for faster lookups and updates
+        if language in self.profanity_patterns:
+            # Update existing patterns and exclude patterns
+            self.profanity_patterns[language]["patterns"].update(custom_patterns)
+            self.profanity_patterns[language]["exclude_patterns"].update(
+                exclude_patterns
+            )
+        else:
+            # Initialize new language patterns and exclude patterns
+            self.profanity_patterns[language] = {
+                "patterns": set(custom_patterns),
+                "exclude_patterns": set(exclude_patterns),
+            }
 
-        if language not in self.languages:
-            self.languages.append(language)
+        # Add the language to the set of languages if not already present
+        self.languages.add(language)
 
     def _load_all_pattern_sets(
         self,
@@ -205,14 +231,16 @@ class ProfanityFilter:
                 - "exclude_patterns": A set of combined exclude patterns.
         """
 
-        profanity_patterns = set()
-        exclude_patterns = set()
+        profanity_patterns: Set[str] = set()
+        exclude_patterns: Set[str] = set()
 
+        # Combine patterns from all specified languages
         for language in languages:
             patterns = self.profanity_patterns.get(language, {})
             profanity_patterns.update(patterns.get("patterns", []))
             exclude_patterns.update(patterns.get("exclude_patterns", []))
 
+        # Add custom patterns
         profanity_patterns.update(custom_patterns)
         exclude_patterns.update(custom_exclude_patterns)
 
@@ -234,18 +262,25 @@ class ProfanityFilter:
             List[str]: A list of active languages.
         """
 
-        active_languages = list(self.languages)
+        # Start with the currently loaded languages
+        active_languages = self.languages
 
+        # Load specified languages if provided
         if languages:
             self._load_languages(languages)
             if "all" in languages:
                 active_languages = self.languages
             else:
-                active_languages = languages
+                active_languages.extend(
+                    lang for lang in languages if lang not in active_languages
+                )
 
+        # Load additional languages if provided
         if additional_languages:
             self._load_languages(additional_languages, is_additional_language=True)
-            active_languages += additional_languages
+            active_languages.extend(
+                lang for lang in additional_languages if lang not in active_languages
+            )
 
         return active_languages
 
@@ -271,8 +306,10 @@ class ProfanityFilter:
             bool: True if the text contains profanity, False otherwise.
         """
 
+        # Get the active languages to be used for profanity detection
         active_languages = self._get_active_languages(languages, additional_languages)
 
+        # Load all patterns for the active languages and custom patterns
         all_patterns = self._load_all_pattern_sets(
             active_languages, custom_patterns, custom_exclude_patterns
         )
@@ -280,15 +317,23 @@ class ProfanityFilter:
         profanity_patterns = all_patterns["patterns"]
         exclude_patterns = all_patterns["exclude_patterns"]
 
-        lines = text.split()
+        # Split the text into words
+        words = text.split()
 
-        for word in lines:
+        # Check each word for profanity
+        for word in words:
+            stripped_word = self._strip(word)
+            normalized_word = self._normalize_word(stripped_word)
+
+            # If the word is profane, return True
             if self._is_profane_word(
-                word,
+                normalized_word,
                 profanity_patterns=profanity_patterns,
                 exclude_patterns=exclude_patterns,
             ):
                 return True
+
+        # If no profane words are found, return False
         return False
 
     def _is_profane_word(
@@ -308,14 +353,15 @@ class ProfanityFilter:
         Returns:
             bool: True if the word is considered profane, False otherwise.
         """
-
+        # Normalize and strip the word
         normalized_word = self._normalize_word(self._strip(word))
 
-        if not any(pattern in normalized_word for pattern in exclude_patterns) and any(
-            pattern in normalized_word for pattern in profanity_patterns
-        ):
-            return True
-        return False
+        # Check if the word is in the exclude patterns
+        if normalized_word in exclude_patterns:
+            return False
+
+        # Check if the word is in the profanity patterns
+        return normalized_word in profanity_patterns
 
     def censor_word(
         self, word: str, partial_censor: bool = False, censoring_char: str = "#"
@@ -331,14 +377,14 @@ class ProfanityFilter:
         Returns:
             str: The censored word.
         """
+        word_length = len(word)
 
-        if partial_censor:
-            if len(word) > 2:
-                return word[0] + censoring_char * (len(word) - 2) + word[-1]
-            else:
-                return censoring_char * len(word)
-        else:
-            return censoring_char * len(word)
+        # If partial censoring is enabled and the word length is greater than 2
+        if partial_censor and word_length > 2:
+            return f"{word[0]}{censoring_char * (word_length - 2)}{word[-1]}"
+
+        # Fully censor the word
+        return censoring_char * word_length
 
     def censor(
         self,
@@ -380,8 +426,8 @@ class ProfanityFilter:
 
         for word in words:
             stripped_word = self._strip(word)
-
             normalized_word = self._normalize_word(word)
+
             if self._is_profane_word(
                 normalized_word,
                 profanity_patterns=profanity_patterns,
