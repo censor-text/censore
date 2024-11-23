@@ -7,15 +7,15 @@ class TestProfanityFilter(unittest.TestCase):
     def setUp(self):
         self.filter = ProfanityFilter()
 
-    def test_contains_profanity(self):
-        text_with_profanity = "This is a fucking bad text."
-        text_without_profanity = "This is a very good text."
-        self.assertTrue(
-            self.filter.contains_profanity(text_with_profanity, languages=["en"])
-        )
-        self.assertFalse(
-            self.filter.contains_profanity(text_without_profanity, languages=["en"])
-        )
+    # def test_contains_profanity(self):
+    #     text_with_profanity = "This is a fucking bad text."
+    #     text_without_profanity = "This is a very good text."
+    #     self.assertTrue(
+    #         self.filter.contains_profanity(text_with_profanity, languages=["en"])
+    #     )
+    #     self.assertFalse(
+    #         self.filter.contains_profanity(text_without_profanity, languages=["en"])
+    #     )
 
     def test_contains_profanity(self):
         profane_word = "fuck"
@@ -38,7 +38,7 @@ class TestProfanityFilter(unittest.TestCase):
     def test_censor(self):
         text = "This is a fucking bad text."
         censored_text = self.filter.censor(text, languages=["en"])
-        self.assertIn("####", censored_text)
+        self.assertIn("#######", censored_text)
         self.assertNotIn("fucking", censored_text)
 
     def test_add_custom_patterns(self):
