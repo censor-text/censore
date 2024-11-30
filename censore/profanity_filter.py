@@ -1,6 +1,11 @@
 import os
-from typing import List, Optional, Dict, FrozenSet, Set, Union, Iterable
+from typing import Optional, Dict, Set, Iterable
 from functools import lru_cache
+from utils import load_patterns_from_file, normalize_word, strip
+
+
+# Path to the data folder containing pattern files
+data_folder: str = os.path.join(os.path.dirname(__file__), "data")
 
 
 class ProfanityFilter:
@@ -14,24 +19,6 @@ class ProfanityFilter:
         languages: Set of languages for which profanity patterns are loaded.
         profanity_patterns: Dictionary storing profanity and exclusion patterns for each language.
     """
-
-    _substitution_table: Dict[int, str] = str.maketrans(
-        {
-            "0": "o",
-            "1": "i",
-            "@": "a",
-            "$": "s",
-            "3": "e",
-            "5": "s",
-            "7": "t",
-            "8": "b",
-        }
-    )
-
-    strip_chars: str = ".,!?:;/()[]{}-"
-
-    # Path to the data folder containing pattern files
-    _data_folder: str = os.path.join(os.path.dirname(__file__), "data")
 
     def __init__(
         self,
@@ -78,7 +65,7 @@ class ProfanityFilter:
         if "all" in languages:
             languages_for_loading = set(
                 os.path.splitext(filename)[0]
-                for filename in os.listdir(os.path.join(self._data_folder, "patterns"))
+                for filename in os.listdir(os.path.join(data_folder, "patterns"))
                 if filename.endswith(".txt")
             )
         else:
@@ -103,16 +90,14 @@ class ProfanityFilter:
         """
         if language not in self.languages:
             path_to_profanity_patterns = os.path.join(
-                self._data_folder, "patterns", f"{language}.txt"
+                data_folder, "patterns", f"{language}.txt"
             )
             path_to_exclude_patterns = os.path.join(
-                self._data_folder, "exclude_patterns", f"{language}.txt"
+                data_folder, "exclude_patterns", f"{language}.txt"
             )
 
-            profanity_patterns = self._load_patterns_from_file(
-                path_to_profanity_patterns
-            )
-            exclude_patterns = self._load_patterns_from_file(path_to_exclude_patterns)
+            profanity_patterns = load_patterns_from_file(path_to_profanity_patterns)
+            exclude_patterns = load_patterns_from_file(path_to_exclude_patterns)
 
             self.profanity_patterns[language] = {
                 "patterns": set(profanity_patterns),
@@ -121,50 +106,6 @@ class ProfanityFilter:
 
             if not is_additional_language:
                 self.languages.update({language})
-
-    @staticmethod
-    @lru_cache(maxsize=None)
-    def _load_patterns_from_file(filepath: str) -> FrozenSet[str]:
-        """
-        Loads patterns from a file and caches the result.
-
-        Args:
-            filepath: The path to the pattern file.
-
-        Returns:
-            A set of patterns loaded from the file.
-        """
-        with open(filepath, "r", encoding="utf-8") as file:
-            patterns = frozenset(file.read().split())
-        return patterns
-
-    @staticmethod
-    @lru_cache(maxsize=None)
-    def _normalize_word(word: str) -> str:
-        """
-        Normalize a word by translating it using the substitution table and converting it to lowercase.
-
-        Args:
-            word: The word to be normalized.
-
-        Returns:
-            The normalized word.
-        """
-        return word.translate(ProfanityFilter._substitution_table).lower()
-
-    @staticmethod
-    @lru_cache(maxsize=None)
-    def _strip(word: str) -> str:
-        """
-        Strips specified punctuation characters from the beginning and end of the given word.
-
-        Args:
-            word: The word to be stripped of punctuation.
-
-        Returns:
-            The word with specified punctuation characters removed from its beginning and end.
-        """
-        return word.strip(ProfanityFilter.strip_chars)
 
     def add_custom_profanity_patterns(
         self,
@@ -342,7 +283,7 @@ class ProfanityFilter:
         Returns:
             True if the word is considered profane, False otherwise.
         """
-        normalized_word = self._normalize_word(self._strip(word))
+        normalized_word = normalize_word(strip(word))
 
         for pattern in exclude_patterns:
             if pattern in normalized_word:
@@ -417,7 +358,7 @@ class ProfanityFilter:
         censored_text = text
 
         for word in words:
-            stripped_word = self._strip(word)
+            stripped_word = strip(word)
 
             if self._is_profane_word(
                 word,
