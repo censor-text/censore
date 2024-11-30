@@ -1,7 +1,7 @@
 import os
 from typing import Optional, Dict, Set, Iterable
 from functools import lru_cache
-from utils import load_patterns_from_file, normalize_word, strip
+from .utils import load_patterns_from_file, normalize_word, strip
 
 
 # Path to the data folder containing pattern files
