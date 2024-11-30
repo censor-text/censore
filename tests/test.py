@@ -1,5 +1,6 @@
 import unittest
 from censore import ProfanityFilter
+from censore.types import Text, Word
 
 
 class TestProfanityFilter(unittest.TestCase):
@@ -27,19 +28,23 @@ class TestProfanityFilter(unittest.TestCase):
 
     def test_censor_word(self):
         word = "fuck"
-        censored_word = self.filter.censor_word(word)
-        self.assertEqual(censored_word, "####")
+        censored = self.filter.censor_word(word)
+        self.assertEqual(
+            Word(original=word, censored="####", is_profane=None), censored
+        )
 
     def test_partial_censor_word(self):
         word = "fuck"
-        partially_censored_word = self.filter.censor_word(word, partial_censor=True)
-        self.assertEqual(partially_censored_word, "f##k")
+        partially_censored = self.filter.censor_word(word, partial_censor=True)
+        self.assertEqual(
+            Word(original=word, censored="f##k", is_profane=None), partially_censored
+        )
 
     def test_censor(self):
         text = "This is a fucking bad text."
-        censored_text = self.filter.censor(text, languages=["en"])
-        self.assertIn("#######", censored_text)
-        self.assertNotIn("fucking", censored_text)
+        censored = self.filter.censor(text, languages=["en"])
+        self.assertIn("#######", censored.censored)
+        self.assertNotIn("fucking", censored.censored)
 
     def test_add_custom_patterns(self):
         custom_patterns = ["foobar"]
@@ -69,8 +74,16 @@ class TestProfanityFilter(unittest.TestCase):
 
     def test_censor_special_characters(self):
         text = "It's @ssh0l3."
-        censored_text = self.filter.censor(text, languages=["en"])
-        self.assertEqual("It's #######.", censored_text)
+        censored = self.filter.censor(text, languages=["en"])
+        self.assertEqual(
+            Text(
+                original=text,
+                censored="It's #######.",
+                is_profane=True,
+                words_censored=1,
+            ),
+            censored,
+        )
 
 
 if __name__ == "__main__":

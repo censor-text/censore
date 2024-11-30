@@ -1,7 +1,8 @@
 import os
 from typing import Optional, Dict, Set, Iterable
 from functools import lru_cache
-from .utils import load_patterns_from_file, normalize_word, strip
+from .utils.utils import load_patterns_from_file, normalize_word, strip
+from .types import Word, Text
 
 
 # Path to the data folder containing pattern files
@@ -13,9 +14,6 @@ class ProfanityFilter:
     A class used to filter profanity from text with support for multiple languages and custom patterns.
 
     Attributes:
-        _substitution_table: Translation table for character substitutions to normalize words.
-        strip_chars: Characters to strip from words during normalization.
-        _data_folder: Path to the data folder containing pattern files.
         languages: Set of languages for which profanity patterns are loaded.
         profanity_patterns: Dictionary storing profanity and exclusion patterns for each language.
     """
@@ -299,7 +297,7 @@ class ProfanityFilter:
     @lru_cache(maxsize=None)
     def censor_word(
         self, word: str, partial_censor: bool = False, censoring_char: str = "#"
-    ) -> str:
+    ) -> Word:
         """
         Censors a given word by replacing its characters with a specified censoring character.
 
@@ -313,9 +311,14 @@ class ProfanityFilter:
         """
         word_length = len(word)
 
+        censored_word: str
+
         if partial_censor and word_length > 2:
-            return f"{word[0]}{censoring_char * (word_length - 2)}{word[-1]}"
-        return censoring_char * word_length
+            censored_word = f"{word[0]}{censoring_char * (word_length - 2)}{word[-1]}"
+        else:
+            censored_word = censoring_char * word_length
+
+        return Word(original=word, censored=censored_word, is_profane=None)
 
     def censor(
         self,
@@ -326,7 +329,7 @@ class ProfanityFilter:
         custom_exclude_patterns: Optional[Iterable[str]] = None,
         partial_censor: bool = False,
         censor_symbol: str = "#",
-    ) -> str:
+    ) -> Text:
         """
         Censors profane words in the given text based on specified languages and custom patterns.
 
@@ -356,6 +359,8 @@ class ProfanityFilter:
 
         words = text.split()
         censored_text = text
+        is_profane: bool = False
+        words_censored: int = 0
 
         for word in words:
             stripped_word = strip(word)
@@ -365,10 +370,23 @@ class ProfanityFilter:
                 profanity_patterns=profanity_patterns,
                 exclude_patterns=exclude_patterns,
             ):
+                is_profane = True
+
                 censored_word = self.censor_word(
                     stripped_word,
                     partial_censor=partial_censor,
                     censoring_char=censor_symbol,
                 )
-                censored_text = censored_text.replace(stripped_word, censored_word)
-        return censored_text
+
+                censored_text = censored_text.replace(
+                    stripped_word, censored_word.censored
+                )
+
+                words_censored += 1
+
+        return Text(
+            original=text,
+            censored=censored_text,
+            is_profane=is_profane,
+            words_censored=words_censored,
+        )

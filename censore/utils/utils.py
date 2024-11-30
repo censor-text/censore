@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Dict, FrozenSet
 
-substitution_table: Dict[int, str] = str.maketrans(
+_substitution_table: Dict[int, str] = str.maketrans(
     {
         "0": "o",
         "1": "i",
@@ -14,7 +14,7 @@ substitution_table: Dict[int, str] = str.maketrans(
     }
 )
 
-strip_chars = ".,!?:;/()[]{}-"
+_strip_chars = ".,!?:;/()[]{}-"
 
 
 @lru_cache(maxsize=None)
@@ -44,7 +44,7 @@ def normalize_word(word: str) -> str:
     Returns:
         The normalized word.
     """
-    return word.translate(substitution_table).lower()
+    return word.translate(_substitution_table).lower()
 
 
 @lru_cache(maxsize=None)
@@ -58,4 +58,4 @@ def strip(word: str) -> str:
     Returns:
         The word with specified punctuation characters removed from its beginning and end.
     """
-    return word.strip(strip_chars)
+    return word.strip(_strip_chars)
